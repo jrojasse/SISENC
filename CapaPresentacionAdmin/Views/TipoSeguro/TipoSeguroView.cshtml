@@ -1,0 +1,305 @@
+﻿
+@{
+    ViewBag.Title = "TipoSeguroView";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<ol class="breadcrumb mb-4 mt-4">
+    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Resumen</a></li>
+    <li class="breadcrumb-item active">Tipos de Seguros</li>
+</ol>
+
+<!-- Card -->
+<div class="card" style="margin-top: 30px">
+    <div class="card-header">
+        <i class="fas fa-cubes me-1"></i> Lista de Tipos de Seguros
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-12">
+                <button type="button" class="btn btn-success" onclick="abrirModal(null)">Crear Nuevo</button>
+            </div>
+        </div>
+        <hr />
+        <table id="tabla" class="display cell-border" style="width: 100%">
+            <thead>
+                <tr>
+                    <th>Nombre del Tipo de Seguro</th>
+                    <th>Activo</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="FormModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="exampleModalLabel">Tipo de Seguro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-1">
+                    <div class="col-sm-6">
+                        <label id="lblIDTipoSeguro" for="lblIDTipoSeguro" class="form-label">Código del Tipo de Seguro</label>
+                        <input type="text" class="form-control" id="txtIDTipoSeguro" autocomplete="off" value="">
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-sm-6">
+                        <label for="txtTipoSeguro" class="form-label">Nombre del Tipo de Seguro</label>
+                        <input type="text" class="form-control" id="txtTipoSeguro" autocomplete="off">
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="cboActivo" class="form-label">Activo</label>
+                        <select id="cboActivo" class="form-select">
+                            <option value="1">Si</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <!--Mensaje de alerta-->
+            <div class="row mt-2">
+                <div class="col-12">
+                    <div id="MensajeError" class="alert alert-danger" role="alert">
+                        Error!
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="Guardar()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+
+    <script>
+
+        @*jQuery.ajax({
+                url: '@Url.Action("ListarTipoSeguro", "TipoSeguro")',
+                type: "GET",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    console.log(data)
+                }
+            })*@
+
+        var tabladata;
+        var FilaSeleccionada;
+
+        tabladata = $("#tabla").DataTable({
+            responsive: true,
+            ordering: true,
+            "ajax": {
+                url: '@Url.Action("ListarTipoSeguro", "TipoSeguro")',
+                type: "GET",
+                dataType: "json"
+            },
+            "columns": [
+                { "data": "Nombre_Tipo_Seguro" },
+                {
+                    "data": "Activo", "render": function (valor) {
+                        if (valor) {
+                            return '<span class="badge bg-success">Si</span>'
+                        } else {
+                            return '<span class="badge bg-danger">No</span>'
+                        }
+                    }
+                },
+                {
+                    "defaultContent": '<button type="button" class="btn btn-primary btn-sm btn-editar"><i class="fas fa-pen"></i></button>' +
+                        '<button type="button" class="btn btn-danger btn-sm ms-2 btn-eliminar"><i class="fas fa-trash"></i></button>',
+                    "orderable": false,
+                    "searchable": false,
+                    "width":"90px"
+                }
+            ],
+            "language": {
+                "url": "https://cdn.datatables.net/plug-ins/1.13.2/i18n/es-ES.json"
+            }
+        });
+
+        function abrirModal(json) {
+
+            if (json != null) {
+                $("#txtIDTipoSeguro").val(json.ID_Tipo_Seguro);
+                $("#lblIDTipoSeguro").hide();
+                $("#txtIDTipoSeguro").hide();
+                $("#txtTipoSeguro").val(json.Nombre_Tipo_Seguro);
+                $("#cboActivo").val(json.Activo == true ? 1 : 0);
+                $("#MensajeError").hide();
+                $("#FormModal").modal("show");
+            } else {
+                $("#txtIDTipoSeguro").val("");
+                $("#lblIDTipoSeguro").show();
+                $("#txtIDTipoSeguro").show();
+                $("#txtTipoSeguro").val("");
+                $("#cboActivo").val(1);
+                $("#MensajeError").hide();
+                $("#FormModal").modal("show");
+            }
+        }
+
+        $("#tabla tbody").on("click", '.btn-editar', function () {
+            FilaSeleccionada = $(this).closest("tr");
+            var data = tabladata.row(FilaSeleccionada).data();
+            abrirModal(data);
+        })
+
+        $("#tabla tbody").on("click", '.btn-eliminar', function () {
+            var TipoSeguroSeleccionado = $(this).closest("tr");
+            var data = tabladata.row(TipoSeguroSeleccionado).data();
+            swal({
+                title: "¿Esta Seguro?",
+                text: "¿Desea eliminar la TipoSeguro?",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonClass: "btn-primary",
+                confirmButtonText: "Si",
+                cancelButtonText: "No",
+                closeOnConfirm: true
+            },
+
+                function () {
+
+                    jQuery.ajax({
+                        url: '@Url.Action("EliminarTipoSeguro", "TipoSeguro")',
+                        type: "POST",
+                        data: JSON.stringify({ id: data.ID_Tipo_Seguro }),
+                        dataType: "json",
+                        contentType: "application/json; charset=utf-8",
+                        success: function (data) {
+
+                            $(".modal-body").LoadingOverlay("hide");
+
+                            if (data.Resultado) {
+
+                                tabladata.row(TipoSeguroSeleccionado).remove().draw();
+
+                            } else {
+
+                                swal("No se pudo eliminar", data.Mensaje, "error");
+
+                            }
+
+                        },
+                        error: function (error) {
+
+                            $(".modal-body").LoadingOverlay("hide");
+                            $("#MensajeError").text("Error Ajax");
+                            $("#MensajeError").show();
+
+                        },
+                        beforeSend: function(){
+
+                            $(".modal-body").LoadingOverlay("show", {
+                                imageResizeFactor: 2,
+                                text: "Cargando...",
+                                size: 14
+                            });
+
+                        }
+                    });
+
+
+                });
+        })
+
+        function Guardar() {
+            var TipoSeguro = {
+                Activo: $("#cboActivo").val() == 1 ? true: false,
+                ID_Tipo_Seguro: $("#txtIDTipoSeguro").val(),
+                Nombre_Tipo_Seguro: $("#txtTipoSeguro").val(),
+            }
+            var id;
+
+            if ($("#txtIDTipoSeguro").is(':hidden')) {
+
+                id = "";
+
+            } else {
+                id = TipoSeguro.ID_Tipo_Seguro;
+            }
+
+            jQuery.ajax({
+                url: '@Url.Action("GuardarTipoSeguro", "TipoSeguro")',
+                type: "POST",
+                data: JSON.stringify({ objeto: TipoSeguro, id}),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    
+                    $(".modal-body").LoadingOverlay("hide");
+                    //TipoSeguro Nuevo
+                    if (TipoSeguro.ID_Tipo_Seguro == data.Resultado) {
+
+                        if (data.Resultado != "") {
+
+                            TipoSeguro.ID_Tipo_Seguro = data.Resultado;
+                            tabladata.row.add(TipoSeguro).draw(false);
+                            $("#FormModal").modal("hide");
+
+                        } else {
+
+                            $("#MensajeError").text(data.Mensaje);
+                            $("#MensajeError").show();
+
+                        }
+
+                    }
+                    //TipoSeguro Editar
+                    else {
+
+                        if (data.Resultado) {
+
+                            tabladata.row(FilaSeleccionada).data(TipoSeguro).draw(false);
+                            FilaSeleccionada = null;
+                            $("#FormModal").modal("hide");
+
+                        } else {
+
+                            $("#MensajeError").text(data.Mensaje);
+                            $("#MensajeError").show();
+
+                        }
+
+
+                    }
+
+                },
+                error: function (error) {
+
+                    $(".modal-body").LoadingOverlay("hide");
+                    $("#MensajeError").text("Error Ajax");
+                    $("#MensajeError").show();
+
+                },
+                beforeSend: function(){
+
+                    $(".modal-body").LoadingOverlay("show", {
+                        imageResizeFactor: 2,
+                        text: "Cargando...",
+                        size: 14
+                    });
+
+                }
+            });
+
+        }
+
+
+    </script>
+}
+
+

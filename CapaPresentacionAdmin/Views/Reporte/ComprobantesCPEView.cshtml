@@ -1,0 +1,272 @@
+﻿
+@{
+    ViewBag.Title = "ComprobantesCPEView";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<ol class="breadcrumb mb-4 mt-4">
+    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Resumen</a></li>
+    <li class="breadcrumb-item active">ComprobantesCPE</li>
+</ol>
+
+<!-- Card -->
+<div class="card" style="margin-top: 30px">
+    <div class="card-header">
+        <i class="fas fa-cubes me-1"></i> Lista de Comprobantes CPE
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-12">
+                <button type="button" class="btn btn-success" onclick="abrirModal(null)">Exportar</button>
+            </div>
+        </div>
+        <hr />
+        <table id="tabla" class="display cell-border" style="width: 100%">
+            <thead>
+                <tr>
+                    <th>Fecha de Operacion</th>
+                    <th>Tipo de Documento de Identidad</th>
+                    <th>Número de Documento de Identidad</th>
+                    <th>Nombres</th>
+                    <th>Apellido Paterno</th>
+                    <th>Apellido Materno</th>
+                    <th>Ubigeo</th>
+                    <th>Prima</th>
+                    <th>Número de Póliza</th>
+                    <th>Inicio de Vigencia</th>
+                    <th>Fin de Cobertura</th>
+                    <th>Nombre del Producto</th>
+                    <th>Mes</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="FormModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="exampleModalLabel">Exportar ComprobantesCPE</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="form-control" id="txtIDFormato" autocomplete="off" value="0">
+                <div class="row g-2">
+                    <div class="col-sm-12">
+                        <label for="cboProducto" class="form-label">Producto</label>
+                        <select id="cboProducto" class="form-select">
+                        </select>
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="cboYear" class="form-label">Año</label>
+                        <select id="cboYear" class="form-select">
+                        </select>
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="cboMes" class="form-label">Mes</label>
+                        <select id="cboMes" class="form-select">
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <!--Mensaje de alerta-->
+            <div class="row mt-2">
+                <div class="col-12">
+                    <div id="MensajeError" class="alert alert-danger" role="alert">
+                        Error!
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="Guardar()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+
+    <script>
+
+            var tabladata;
+            var FilaSeleccionada;
+
+            tabladata = $("#tabla").DataTable({
+                pageLength: 500,
+                responsive: true,
+                ordering: true,
+                "ajax": {
+                    url: '@Url.Action("ListarComprobantesCPE", "Reporte")',
+                    type: "GET",
+                    dataType: "json"
+                },
+                "columns": [
+                    { "data": "Fecha_Operacion" },
+                    { "data": "Tipo_Documento_Identidad_Asegurado_Titular" },
+                    { "data": "Numero_Documento_Identidad_Asegurado_Titular" },
+                    { "data": "Nombres_Razon_Social_Asegurado_Titular" },
+                    { "data": "Apellido_Paterno_Asegurado_Titular" },
+                    { "data": "Apellido_Materno_Asegurado_Titular" },
+                    { "data": "Ubigeo_Cliente" },
+                    { "data": "Prima_Facturar" },
+                    { "data": "Numero_Poliza" },
+                    { "data": "Inicio_Vigencia" },
+                    { "data": "Fin_Cobertura" },
+                    { "data": "Nombre_Producto" },
+                    { "data": "Mes" },
+                ],
+                "language": {
+                    "url": "https://cdn.datatables.net/plug-ins/1.13.2/i18n/es-ES.json"
+                }
+            });
+
+            jQuery.ajax({
+                url: '@Url.Action("ListarProducto", "Producto")',
+                type: "GET",
+                data: null,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    $("<option>").attr({ "value": "0", "disabled": "true" }).text("Seleccionar").appendTo("#cboProducto");
+
+                    $.each(data.data, function (index, valor) {
+                        if (valor.Activo == 1) {
+                            $("<option>").attr({ "value": valor.ID_Producto }).text(valor.Nombre_Producto).appendTo("#cboProducto");
+                        }
+                        $("#cboProducto").change(function () {
+                            if ($("#cboProducto").val() == valor.ID_Producto) {
+                                $("#txtIDFormato").val(valor.oFormato.ID_Formato);
+                            }
+                        });
+                    })
+                },
+            });
+
+
+            function abrirModal(json) {
+
+                if (json != null) {
+                    $("#cboProducto").val();
+                    $("#cboYear").hide();
+                    $("#cboMes").hide();
+                    $("#MensajeError").hide();
+                    $("#FormModal").modal("show");
+
+                } else {
+                    if ($("#cboYear option:first").val() != 0 || $("#cboMes option:first").val() != 0) {
+                        $("<option>").attr({ "value": "0", "disabled": "true" }).text("Seleccionar").appendTo("#cboYear");
+                        $.each([1, 2, 3, 4, 5], function (index, valor) {
+                            var d = new Date();
+                            $("<option>").attr({ "value": d.getFullYear() - index }).text(d.getFullYear() - index).appendTo("#cboYear");
+                        })
+
+                        $("<option>").attr({ "value": "0", "disabled": "true" }).text("Seleccionar").appendTo("#cboMes");
+                        $.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], function (index, valor) {
+                            var month = new Array(11);
+                            month[0] = "01";
+                            month[1] = "02";
+                            month[2] = "03";
+                            month[3] = "04";
+                            month[4] = "05";
+                            month[5] = "06";
+                            month[6] = "07";
+                            month[7] = "08";
+                            month[8] = "09";
+                            month[9] = "10";
+                            month[10] = "11";
+                            month[11] = "12";
+                            $("<option>").attr({ "value": month[index] }).text(month[index]).appendTo("#cboMes");
+                        })
+                    }
+                    $("#cboProducto").val($("#cboProducto option:first").val());
+                    $("#cboYear").val($("#cboYear option:first").val());
+                    $("#cboMes").val($("#cboMes option:first").val());
+                    $("#MensajeError").hide();
+                    $("#FormModal").modal("show");
+                }
+            }
+
+            function Guardar() {
+                var Producto = {
+                    ID_Producto: $("#cboProducto option:selected").val(),
+                    oFormato: {
+                        ID_Formato: $("#txtIDFormato").val()
+                    },
+                }
+                var Year = $("#cboYear").val();
+                var Mes = $("#cboMes").val();
+
+                jQuery.ajax({
+                    url: '@Url.Action("ExportarReporte", "Reporte")',
+                    type: "POST",
+                    data: JSON.stringify({ Producto: Producto, Year, Mes }),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+
+                        $(".modal-body").LoadingOverlay("hide");
+                        //Estructura Nueva
+
+                        if (Producto.oFormato.ID_Formato > 0) {
+
+                            if (data.Resultado != 0) {
+
+                                tabladata.ajax.reload();
+                                $("#FormModal").modal("hide");
+
+                            } else {
+
+                                $("#MensajeError").text(data.Mensaje);
+                                $("#MensajeError").show();
+
+                            }
+
+                        }
+                        //Estructura Editar
+                        else {
+
+                            if (data.Resultado) {
+
+                                tabladata.row(FilaSeleccionada).data(Estructura).draw(false);
+                                FilaSeleccionada = null;
+                                $("#FormModal").modal("hide");
+
+                            } else {
+
+                                $("#MensajeError").text(data.Mensaje);
+                                $("#MensajeError").show();
+
+                            }
+
+
+                        }
+
+                    },
+                    error: function (error) {
+
+                        $(".modal-body").LoadingOverlay("hide");
+                        $("#MensajeError").text("Error Ajax");
+                        $("#MensajeError").show();
+
+                    },
+                    beforeSend: function(){
+
+                        $(".modal-body").LoadingOverlay("show", {
+                            imageResizeFactor: 2,
+                            text: "Cargando...",
+                            size: 14
+                        });
+
+                    }
+                });
+
+            }
+
+    </script>
+}
+

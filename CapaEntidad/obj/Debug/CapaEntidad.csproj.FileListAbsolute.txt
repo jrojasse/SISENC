@@ -1,0 +1,5 @@
+D:\PROYECTO  TESIS\UCV\CLASES\CODIGO-BD\SISENC-master\SISENC-master\CapaEntidad\bin\Debug\CapaEntidad.dll
+D:\PROYECTO  TESIS\UCV\CLASES\CODIGO-BD\SISENC-master\SISENC-master\CapaEntidad\bin\Debug\CapaEntidad.pdb
+D:\PROYECTO  TESIS\UCV\CLASES\CODIGO-BD\SISENC-master\SISENC-master\CapaEntidad\obj\Debug\CapaEntidad.csproj.CoreCompileInputs.cache
+D:\PROYECTO  TESIS\UCV\CLASES\CODIGO-BD\SISENC-master\SISENC-master\CapaEntidad\obj\Debug\CapaEntidad.dll
+D:\PROYECTO  TESIS\UCV\CLASES\CODIGO-BD\SISENC-master\SISENC-master\CapaEntidad\obj\Debug\CapaEntidad.pdb
